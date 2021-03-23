@@ -1,5 +1,5 @@
 $(document).ready(function(){
-	var socket = io("http://localhost:3000");
+	var socket = io("http://localhost:3000", { autoConnect: false, reconnection: false });
 
 	$('.chat_head').click(function(){
 		$('.chat_body').slideToggle('slow');
@@ -11,13 +11,18 @@ $(document).ready(function(){
 		$('.msg_box').hide();
 	});
 	$('#setNick').submit(function(){
-				socket.emit('new user', $('#nickName').val());
-                console.log('status Ok');
 
-				$('#nickWrap').hide();
-				$('.chat_box').show();
+		socket.auth = {username: $('#nickName').val()};
+    	socket.connect();
 
-			    return false;
+		// socket.emit('new user', $('#nickName').val());
+        
+        console.log('status Ok');
+
+		$('#nickWrap').hide();
+		$('.chat_box').show();
+
+		return false;
 	});
 
 	function usernameClick(){
@@ -89,6 +94,35 @@ $(document).ready(function(){
 			    $('.msg_body').scrollTop($('.msg_body')[0].scrollHeight);
 			}
 
-		});
+	});
+
+    socket.on("disconnect", (reason) => {
+            console.log("Server shut down with reason: " + reason);
+            if (reason === "io server disconnect") {
+              // the disconnection was initiated by the server, you need to reconnect manually
+              console.log("Server shut down!");
+              socket.connect();
+            }
+            // else the socket will automatically try to reconnect
+    });
+
+	const tryReconnect = () => {
+		setTimeout(() => {
+		  socket.io.open((err) => {
+			console.log("Open socket: " + err);
+			if (err) {
+				console.log("Err socket: " + err);
+				tryReconnect();
+			} else{
+				console.log("Not err socket");
+				socket.auth = {username: $('#nickName').val()};
+    			// socket.connect();
+				console.log("Connection established!");
+			}
+		  });
+		}, 2000);
+	  }
+	  
+	  socket.io.on("close", tryReconnect);
 
 });
