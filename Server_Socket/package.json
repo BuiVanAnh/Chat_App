@@ -13,6 +13,7 @@
     "express": "^4.17.1",
     "ioredis": "^4.24.3",
     "mongodb": "^3.6.5",
+    "mqtt": "^4.2.6",
     "socket.io": "^4.0.0",
     "socket.io-redis": "^6.1.0",
     "sticky-session": "^1.1.2"
