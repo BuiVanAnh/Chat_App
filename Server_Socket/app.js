@@ -21,7 +21,8 @@ const sessionStore = new RedisSessionStore(redisClient);
 
 const io = require("socket.io")(httpServer, {
     cors: {
-      origin: "http://localhost:8888",
+    //   origin: "http://localhost:" + process.env.PORT_WEB_1,
+        origin: '*',
     },
     adapter: require("socket.io-redis")({
       pubClient: redisClient,
@@ -29,9 +30,9 @@ const io = require("socket.io")(httpServer, {
     }),
   });
 
-// httpServer.listen(3000, () =>
-//     console.log(`server listening at http://localhost:3000`)
-// );
+httpServer.listen(process.env.PORT, () =>
+    console.log(`server listening at http://localhost:` + process.env.PORT)
+);
 
 var users = [];
 
@@ -136,7 +137,7 @@ io.on('connection', async (socket) => {
 
 });
 
-setupWorker(io);
+// setupWorker(io);
 
 //-------------------API---------------------//
 app.get('/messageForUser', function(req, res){
@@ -151,3 +152,102 @@ app.get('/messageForUser', function(req, res){
     res.send(messages);
 
 });
+
+// const mqtt = require('mqtt');
+
+// // connection option
+// const options = {
+//     clean: true, // retain session
+//     connectTimeout: 4000, // Timeout period
+//     // Authentication information
+//     clientId: 'emqx_test',
+//     // username: 'emqx_test',
+//     // password: 'emqx_test',
+// }
+  
+// const connectUrl = 'mqtt://localhost';
+// const client = mqtt.connect(connectUrl, options);
+  
+// client.on("connect",function(){	
+//     console.log("EMQ X connected");
+// });
+  
+// // var options={
+// //     retain:true,
+// //     qos:1
+// // };
+  
+// // if (client.connected == true){
+// //     client.publish("testtopic", "test message", { retain:true, qos:1 } );
+// //     console.log("Message push to testtopic");
+// // }
+
+// var options2 = {
+//     retain:true,
+//     qos:1
+// };
+
+// var message="test message";
+// var topic="testtopic";
+// //publish every 5 secs
+// var i = 0;
+// var timer_id = setInterval(function(){ publish( topic, message + i++, options2);}, 5000);
+
+// //publish function
+// function publish(topic,msg,options){
+//     console.log("publishing",msg);
+//     if (client.connected == true){
+//         client.publish(topic,msg,options);
+//     }
+// }
+
+var mqtt    = require('mqtt');
+var client  = mqtt.connect("mqtt://localhost",{clientId:"mqttjs01"});
+console.log("connected flag  " + client.connected);
+
+//handle incoming messages
+// client.on('message',function(topic, message, packet){
+// 	console.log("message is "+ message + " in " + topic);
+// 	// console.log("topic is "+ topic);
+// });
+
+
+client.on("connect",function(){	
+console.log("connected  "+ client.connected);
+
+})
+//handle errors
+client.on("error",function(error){
+    console.log("Can't connect" + error);
+    process.exit(1)
+});
+
+//publish
+function publish(topic,msg,options){
+    console.log("publishing",msg);
+
+    if (client.connected == true){
+	
+        client.publish(topic,msg,options);
+
+    }
+}
+
+//////////////
+
+var options={
+    retain:true,
+    qos:1
+};
+var topic="testtopic";
+var message="test message 1 ";
+// var topic_list=["topic2","topic3","topic4"];
+// var topic_o={"topic22":0,"topic33":1,"topic44":1};
+// console.log("subscribing to topics");
+// client.subscribe(topic,{qos:1}); //single topic
+// client.subscribe(topic_list,{qos:1}); //topic list
+// client.subscribe(topic_o); //object
+var i = 0;
+var timer_id=setInterval(function(){publish(topic,message + (i++),options);},5000);
+//notice this is printed even before we connect
+console.log("end of script");
